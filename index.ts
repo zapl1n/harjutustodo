@@ -32,20 +32,23 @@ app.post('/users', async (req, res) => {
   // Validate email and password
 
   if (!req.body.email || !req.body.password) {
-    return res.status(400).send('email and password required')
+    return res.status(400).send('Email and password required')
   }
-  // Validate email unique
+
+  // Validate that email is unique
   const userExists = await prisma.user.findUnique({
     where: {
       email: req.body.email
     }
   })
+
   if (userExists) {
-    return res.status(400).send('email already exists')
+    return res.status(409).send('Email already exists')
   }
 
   // Hash password
   const hashedPassword = await bcrypt.hash(req.body.password, 10)
+
   // Create user
   const user = await prisma.user.create({
     data: {

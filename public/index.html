@@ -14,7 +14,7 @@
 </head>
 
 <body>
-  <div id="app">{{ message }}
+  <div id="app">
 
     <!-- Button trigger modal -->
     <a @click="showModal('signup-modal')" href="#">
@@ -66,6 +66,7 @@
           modalHandler: null,
           signUpEmail: '',
           signUpPassword: '',
+          sessionToken: '',
         }
       },
       methods: {
@@ -73,13 +74,18 @@
           this.modalHandler = new bootstrap.Modal(document.getElementById(name), {})
           this.modalHandler.show()
         },
-        submitSignUpForm: function () {
-          this.send('POST','users', {
+        submitSignUpForm: async function () {
+          let response = await this.send('POST', 'users', {
             email: this.signUpEmail,
             password: this.signUpPassword
           })
+
+          if (response.ok) {
+            this.modalHandler.hide()
+          }
         },
-        send: async function performAction(action, collection, data) {
+
+        send: async function (action, collection, data) {
           try {
             const response = await fetch('/' + collection, {
               method: action,

@@ -4,7 +4,7 @@
   "description": "",
   "main": "index.ts",
   "scripts": {
-    "start": "nodemon --exec ts-node index.ts",
+    "start": "nodemon -e js,ts,yaml,json,prisma --exec ts-node index.ts",
     "test": "npx cypress run --browser chrome --headless --spec cypress/e2e/Tests.cy.ts"
   },
   "keywords": [],
