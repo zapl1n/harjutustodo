@@ -1,6 +1,8 @@
 // Add express
-import express, { NextFunction, Request, Response } from 'express'
+import express, { NextFunction, Response } from 'express'
 const app = express()
+
+import { IRequestWithSession } from './custom'
 
 // Add bcrypt
 import * as bcrypt from 'bcrypt'
@@ -100,8 +102,8 @@ app.post('/sessions', async (req, res) => {
   })
 })
 
-  // Add authorization middleware
-  const authorizeRequest = async (req: Request, res: Response, next: NextFunction) => {
+// Add authorization middleware
+const authorizeRequest = async (req: IRequestWithSession, res: Response, next: NextFunction) => {
 
   // Validate session
   if (!req.headers.authorization) {
@@ -138,14 +140,14 @@ app.post('/sessions', async (req, res) => {
     return res.status(401).send('Invalid session token')
   }
 
-  // Add session to request
-  // @ts-ignore
-    req.sessionToken = sessionToken
+  // Add user and sessionToken to request
+  req.userId = user.id
+  req.sessionToken = sessionToken
 
   next()
 }
 
-app.delete('/sessions', authorizeRequest, async (req, res) => {
+app.delete('/sessions', authorizeRequest, async (req: IRequestWithSession, res) => {
 
   // Delete session
   await prisma.session.delete({
@@ -156,6 +158,20 @@ app.delete('/sessions', authorizeRequest, async (req, res) => {
 
   // Return session
   res.status(204).end()
+})
+
+// Get items
+app.get('/items', authorizeRequest, async (req: IRequestWithSession, res: Response) => {
+
+  // Get items for the signed-in user
+  const items = await prisma.item.findMany({
+    where: {
+      userId: req.userId
+    }
+  })
+
+  // Return items
+  res.status(200).json(items)
 })
 
 // Listen to port

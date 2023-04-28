@@ -22,3 +22,9 @@ model Session {
   expires DateTime
   user User @relation(fields: [userId], references: [id])
 }
+
+model Item {
+  id          Int     @id @default(autoincrement())
+  description String
+  userId      Int     
+}

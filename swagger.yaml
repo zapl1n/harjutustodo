@@ -92,6 +92,38 @@ paths:
                     Bearer: []
             summary: Destroy a Session
             description: Deletes a `Session`.
+    /items:
+        get:
+            tags:
+                - /items
+            responses:
+                '200':
+                    content:
+                        application/json:
+                            examples:
+                                Get items:
+                                    value:
+                                        -
+                                            id: 2
+                                            description: tere
+                                            userId: 26
+                                        -
+                                            id: 3
+                                            description: tere
+                                            userId: 26
+                    description: List of user's items
+                '401':
+                    content:
+                        text/html:
+                            examples:
+                                Authorization header required:
+                                    value: Authorization header required
+                    description: Authorization header required
+            deprecated: false
+            security:
+                -
+                    Bearer: []
+            description: Get items
 components:
     schemas:
         User:
