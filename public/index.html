@@ -13,6 +13,13 @@
       background-color: #f9f9fa
     }
 
+    .card {
+      box-shadow: none;
+      -webkit-box-shadow: none;
+      -moz-box-shadow: none;
+      -ms-box-shadow: none
+    }
+
     .px-3 {
       padding-left: 1rem !important
     }
@@ -26,8 +33,7 @@
       background-color: #fff;
       background-clip: border-box;
       border: 1px solid #d2d2dc;
-      border-radius: 0;
-      box-shadow: none;
+      border-radius: 0
     }
 
     .px-3 {
@@ -81,6 +87,7 @@
       border-radius: 2px;
       transition: border-color 0.15s ease-in-out, box-shadow 0.15s ease-in-out
     }
+
     .list-wrapper ul {
       padding: 0;
       text-align: left;
@@ -121,6 +128,12 @@
         <div class="col-md-12">
           <div class="card px-3">
             <div class="card-body">
+              <div class="add-items d-flex">
+                <input type="text" class="form-control todo-list-input" placeholder="Add your tasks"
+                  v-model="newItemDescription" data-cy=add-item-input>
+                <button class="add btn btn-primary font-weight-bold todo-list-add-btn" @click="addItem"
+                  data-cy=add-item-button>Add</button>
+              </div>
               <h4 class="card-title">Awesome Todo list</h4>
               <div class="list-wrapper">
                 <ul class="d-flex flex-column-reverse todo-list">
@@ -224,6 +237,7 @@
           signInPassword: '',
           sessionToken: '',
           items: [],
+          newItemDescription: '',
         }
       },
 
@@ -238,6 +252,18 @@
       },
 
       methods: {
+
+        addItem: async function () {
+          const response = await this.send('POST', 'items', {
+            description: this.newItemDescription,
+          });
+
+          if (response.ok) {
+            this.items.push(response.body);
+            this.newItemDescription = '';
+          }
+        },
+
         async fetchItems() {
           const response = await this.send('GET', 'items');
           if (response.ok) {

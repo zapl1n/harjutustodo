@@ -174,6 +174,36 @@ app.get('/items', authorizeRequest, async (req: IRequestWithSession, res: Respon
   res.status(200).json(items)
 })
 
+app.post('/items', authorizeRequest, async (req: IRequestWithSession, res: Response) => {
+
+  try {
+    const { description } = req.body;
+    const newDescription = String(description);
+    const userId = req.userId;
+
+    if (userId === undefined) {
+      throw new Error('User ID is not defined');
+    }
+
+    if (!newDescription) {
+      return res.status(400).send('Description required');
+    }
+
+    const newItem = await prisma.item.create({
+      data: {
+        description: newDescription,
+        userId
+      },
+    });
+
+    res.status(201).json(newItem);
+  }
+
+  catch (error) {
+    res.status(500).send((error as Error).message || 'Something went wrong')
+  }
+});
+
 // Listen to port
 app.listen(port, () => {
   console.log(`Server running at http://localhost:${port}. Documentation at http://localhost:${port}/docs`)
