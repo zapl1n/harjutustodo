@@ -10,18 +10,15 @@
     integrity="sha384-rbsA2VBKQhggwzxH7pPCaAqO46MgnOM80zW1RWuH61DGLwZJEdK2Kadq2F9CUG65" crossorigin="anonymous">
   <style>
     body {
-      background-color: #f9f9fa
+      background-image: linear-gradient(90deg, #2a37e4, #7568ee, #a799f6, #d3ccfc, #ffffff);
+      text-align: center;
+      margin-top: 300px;
     }
 
     .card {
-      box-shadow: none;
       -webkit-box-shadow: none;
       -moz-box-shadow: none;
-      -ms-box-shadow: none
-    }
-
-    .px-3 {
-      padding-left: 1rem !important
+      box-shadow: none
     }
 
     .card {
@@ -29,15 +26,11 @@
       display: flex;
       flex-direction: column;
       min-width: 0;
+      max-width: 100%;
       word-wrap: break-word;
-      background-color: #fff;
+      background-color: #ffffff;
       background-clip: border-box;
-      border: 1px solid #d2d2dc;
       border-radius: 0
-    }
-
-    .px-3 {
-      padding-right: 1rem !important
     }
 
     .card .card-body {
@@ -50,10 +43,10 @@
     }
 
     .card .card-title {
-      color: #000000;
+      color: #291a69;
       margin-bottom: 0.625rem;
       text-transform: capitalize;
-      font-size: 0.875rem;
+      font-size: 1rem;
       font-weight: 500
     }
 
@@ -80,7 +73,7 @@
       padding: 0.875rem 1.375rem;
       font-size: 1rem;
       line-height: 1;
-      color: #495057;
+      color: #000000;
       background-color: #ffffff;
       background-clip: padding-box;
       border: 1px solid #ced4da;
@@ -95,6 +88,55 @@
       margin-bottom: 0
     }
 
+    .list-wrapper li {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 10px;
+    }
+
+    .list-wrapper li .form-check-label {
+      margin-right: 10px;
+    }
+
+    h4 {
+      text-align: center;
+      margin-top: 30px;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      color: #f3f3f3;
+      text-align: center;
+      font-weight: 600;
+      font-size: 50px;
+    }
+
+    .button-container {
+      justify-content: center;
+      display: flex;
+      gap: 20px;
+      align-items: center;
+      margin-top: 50px;
+
+    }
+
+    .bn632 {
+      color: #422da2;
+      padding: 0.7em 1.7em;
+      font-size: 18px;
+      border-radius: 0.5em;
+      background: #e8e8e8;
+      border: 1px solid #e8e8e8;
+      transition: all .3s;
+      box-shadow: 6px 9px 10px #44219f,
+        -2px -2px 0.5px #ffffff;
+    }
+
+    .bn632:hover {
+      color: aliceblue;
+    }
+
     [v-cloak] {
       display: none;
     }
@@ -102,26 +144,28 @@
 </head>
 
 <body>
-
+  <h1>Organize your
+    work and life</h1>
   <div v-cloak id="app">
 
     <div class="container">
 
       <div class="row text-center">
-
-        <!-- Button trigger modal -->
-        <button class="btn btn-success" @click="showModal('signup-modal')" href="#" v-if="!sessionToken">
-          Sign Up
-        </button>
-        &nbsp;
-        <button class="btn btn-success" data-cy=open-signin-modal-button @click="showModal('signin-modal')" href="#"
-          v-if="!sessionToken">
-          Sign In
-        </button>
-        &nbsp;
-        <button class="btn btn-success" data-cy=signout-button @click="signOut" href="#" v-if="sessionToken">
-          Sign Out
-        </button>
+        <div class="button-container">
+          <!-- Button trigger modal -->
+          <button class="bn632" @click="showModal('signup-modal')" href="#" v-if="!sessionToken">
+            Sign Up
+          </button>
+          &nbsp;
+          <button class="bn632" data-cy=open-signin-modal-button @click="showModal('signin-modal')" href="#"
+            v-if="!sessionToken">
+            Sign In
+          </button>
+          &nbsp;
+          <button class="bn632 my-button" data-cy=signout-button @click="signOut" href="#" v-if="sessionToken">
+            Sign Out
+          </button>
+        </div>
       </div>
 
       <div class="row container  d-flex justify-content-center" v-if="sessionToken" data-cy="item-container">
@@ -138,10 +182,16 @@
               <div class="list-wrapper">
                 <ul class="d-flex flex-column-reverse todo-list">
                   <li v-for="item in items">
-                    <div class="form-check"> <label class="form-check-label">
+                    <div class="form-check">
+                      <label class="form-check-label">
                         <input class="checkbox" type="checkbox" v-model="item.completed">
-                        {{ item.description }} <i class="input-helper"></i></label> </div> <i
-                      class="remove mdi mdi-close-circle-outline"></i>
+                        {{ item.description }}
+                        <i class="input-helper"></i>
+                      </label>
+                    </div>
+                    <button class="btn btn-danger btn-sm" @click="confirmDelete(item)">
+                      <i class="fa fa-trash"></i> Delete
+                    </button>
                   </li>
                 </ul>
               </div>
@@ -261,6 +311,19 @@
           if (response.ok) {
             this.items.push(response.body);
             this.newItemDescription = '';
+          }
+        },
+
+        confirmDelete(item) {
+          if (confirm("Do you really want to delete this item?")) {
+            this.deleteItem(item);
+          }
+        },
+
+        deleteItem: async function (item) {
+          const response = await this.send('DELETE', `items/${item.id}`);
+          if (response.ok) {
+            this.items = this.items.filter(i => i.id !== item.id);
           }
         },
 

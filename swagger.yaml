@@ -101,28 +101,13 @@ paths:
                     content:
                         application/json:
                             examples:
-                                Get items:
+                                '[     {         "id": 88,         "description": "asdfasdf",         "userId": 26     } ]':
                                     value:
                                         -
-                                            id: 2
-                                            description: tere
+                                            id: 88
+                                            description: asdfasdf
                                             userId: 26
-                                        -
-                                            id: 3
-                                            description: tere
-                                            userId: 26
-                    description: List of user's items
-                '401':
-                    content:
-                        text/html:
-                            examples:
-                                Authorization header required:
-                                    value: Authorization header required
-                                Invalid session token:
-                                    value: Invalid session token
-                                Invalid authorization header format:
-                                    value: Invalid authorization header format
-                    description: Unauthorized.
+                    description: List of user items
             deprecated: false
             security:
                 -
@@ -147,12 +132,14 @@ paths:
                                         id: 24
                                         description: fasdf
                                         userId: 26
+                    description: Item added
                 '400':
                     content:
                         text/html:
                             examples:
                                 Description required:
                                     value: Description required
+                    description: Bad Request. The request is missing or has an invalid 'description' field.
                 '401':
                     content:
                         text/html:
@@ -163,9 +150,47 @@ paths:
                                     value: Invalid session token
                                 Invalid authorization header format:
                                     value: Invalid authorization header format
+                    description: >-
+                        The client making the request lacks valid authentication credentials for the target
+                        resource.
             security:
                 -
                     Bearer: []
+    '/items/{id}':
+        delete:
+            tags:
+                - /items
+            responses:
+                '204':
+                    description: Item successfully deleted
+                '401':
+                    content:
+                        text/html:
+                            examples:
+                                Authorization header required:
+                                    value: Authorization header required
+                                Invalid session token:
+                                    value: Invalid session token
+                                Invalid authorization header format:
+                                    value: Invalid authorization header format
+                    description: >-
+                        The client making the request lacks valid authentication credentials for the target
+                        resource.
+                '404':
+                    content:
+                        text/html:
+                            examples:
+                                Item not found:
+                                    value: Item not found
+                    description: Item not found
+            security:
+                -
+                    Bearer: []
+        parameters:
+            -
+                name: id
+                in: path
+                required: true
 components:
     schemas:
         User:
