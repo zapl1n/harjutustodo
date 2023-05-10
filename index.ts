@@ -2,6 +2,23 @@
 import { NextFunction, Response, Request } from 'express';
 const express = require('express')
 const app = express()
+import * as https from 'https';
+import * as fs from 'fs';
+
+let httpsServer = https
+  .createServer(
+    // Provide the private and public key to the server by reading each
+    // file's content with the readFileSync() method.
+    {
+      key: fs.readFileSync("key.pem"),
+      cert: fs.readFileSync("cert.pem"),
+    },
+    app
+  )
+
+  .listen(3000, () => {
+    console.log("Server is running at port 3000 ");
+  });
 
 import { IRequestWithSession } from './custom'
 
@@ -276,7 +293,7 @@ app.put('/items/:id', authorizeRequest, async (req: IRequestWithSession, res: Re
     });
 
     if (!item || item.userId !== req.userId) {
-      return res.status(404).send('Item not found');
+      return res.status(404).send('Item not found'); 
     }
 
     const updatedItem = await prisma.item.update({
@@ -297,9 +314,3 @@ app.put('/items/:id', authorizeRequest, async (req: IRequestWithSession, res: Re
     res.status(500).send((error as Error).message || 'Something went wrong')
   }
 });
-
-
-// Listen to port
-app.listen(port, () => {
-  console.log(`Server running at http://localhost:${port}. Documentation at http://localhost:${port}/docs`)
-})
