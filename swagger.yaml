@@ -157,6 +157,60 @@ paths:
                 -
                     Bearer: []
     '/items/{id}':
+        put:
+            requestBody:
+                content:
+                    application/json:
+                        schema:
+                            type: string
+                        examples:
+                            Description:
+                                value:
+                                    description: mina
+                required: true
+            responses:
+                '200':
+                    content:
+                        application/json:
+                            examples:
+                                '{"id":133,"description":"karu","userId":26,"completed":false}':
+                                    value:
+                                        id: 133
+                                        description: karu
+                                        userId: 26
+                                        completed: false
+                    description: Item updated
+                '400':
+                    content:
+                        text/html:
+                            examples:
+                                Description required:
+                                    value: Description required
+                    description: Description required
+                '401':
+                    content:
+                        text/html:
+                            examples:
+                                Authorization header required:
+                                    value: Authorization header required
+                                Invalid session token:
+                                    value: Invalid session token
+                                Invalid authorization header format:
+                                    value: Invalid authorization header format
+                    description: >-
+                        The client making the request lacks valid authentication credentials for the target
+                        resource.
+                '404':
+                    content:
+                        text/html:
+                            examples:
+                                Item not found:
+                                    value: Item not found
+                    description: Item not found
+            security:
+                -
+                    Bearer: []
+            description: Update item
         delete:
             tags:
                 - /items
