@@ -1,5 +1,6 @@
 // Add express
-import express, { NextFunction, Response } from 'express'
+import { NextFunction, Response, Request } from 'express';
+const express = require('express')
 const app = express()
 
 import { IRequestWithSession } from './custom'
@@ -19,8 +20,8 @@ import * as dotenv from 'dotenv'
 dotenv.config()
 
 // Add Swagger
-import swaggerUi from 'swagger-ui-express'
-import yamljs from 'yamljs'
+import * as swaggerUi from 'swagger-ui-express'
+import * as yamljs from 'yamljs'
 const swaggerDocument = yamljs.load('./swagger.yaml')
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
 
@@ -30,7 +31,15 @@ app.use(express.static('public'))
 // Set port
 const port = process.env.Port || 3000
 
-app.post('/users', async (req, res) => {
+export interface PostUserRequest extends Request {
+  email: string,
+  password: string
+}
+interface PostUserResponse extends Response {
+
+}
+
+app.post('/users', async (req: PostUserRequest, res: PostUserResponse) => {
 
   // Validate email and password
   if (!req.body.email || !req.body.password) {
@@ -62,8 +71,16 @@ app.post('/users', async (req, res) => {
   // Return user
   res.status(201).end()
 })
+export interface PostSessionRequest extends Request {
+  email: string,
+  password: string
+}
 
-app.post('/sessions', async (req, res) => {
+export interface PostSessionResponse extends Response {
+  sessionToken: string
+}
+
+app.post('/sessions', async (req: PostSessionRequest, res: PostSessionResponse) => {
 
   // Validate email and password
   if (!req.body.email || !req.body.password) {
@@ -147,7 +164,11 @@ const authorizeRequest = async (req: IRequestWithSession, res: Response, next: N
   next()
 }
 
-app.delete('/sessions', authorizeRequest, async (req: IRequestWithSession, res) => {
+export interface DeleteSessionResponse extends Response {
+ 
+}
+
+app.delete('/sessions', authorizeRequest, async (req: IRequestWithSession, res:DeleteSessionResponse) => {
 
   // Delete session
   await prisma.session.delete({

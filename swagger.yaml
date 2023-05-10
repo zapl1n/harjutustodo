@@ -129,9 +129,7 @@ paths:
                             examples:
                                 Add item:
                                     value:
-                                        id: 24
                                         description: fasdf
-                                        userId: 26
                     description: Item added
                 '400':
                     content:
