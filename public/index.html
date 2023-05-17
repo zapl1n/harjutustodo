@@ -127,6 +127,7 @@
       gap: 20px;
       align-items: center;
       margin-top: 50px;
+
     }
 
     .bn632 {
@@ -167,7 +168,6 @@
 
       <div class="row text-center">
         <div class="button-container">
-
           <!-- Button trigger modal -->
           <button class="bn632" @click="showModal('signup-modal')" href="#" v-if="!sessionToken">
             Sign Up
@@ -320,7 +320,7 @@
   <script>
     const { createApp } = Vue
 
-    createApp({
+    const app = createApp({
       data() {
         return {
           modalHandler: null,
@@ -332,6 +332,7 @@
           items: [],
           newItemDescription: '',
           editItem: null,
+          wss: null,
         }
       },
 
@@ -353,7 +354,6 @@
           });
 
           if (response.ok) {
-            this.items.push(response.body);
             this.newItemDescription = '';
           }
         },
@@ -382,10 +382,20 @@
           if (response.ok) {
 
             // Find the original item from the items array
-            const originalItem = this.items.find(i => i.id === this.editItem.id);
+            const originalItemIndex = this.items.findIndex(i => i.id === response.body.id);
 
             // Update the item in the items array
-            Object.assign(originalItem, response.body);
+            if (originalItemIndex !== -1) {
+              Object.assign(this.items[originalItemIndex], response.body);
+            }
+
+
+            // Send a message to the websocket server to update the item in the other clients
+            connection.send(JSON.stringify({
+              type: 'update',
+              id: this.editItem.id,
+              description: this.editItem.description,
+            }));
 
             // Reset the edit item
             this.editItem = null;
@@ -396,15 +406,21 @@
         },
         // Complete the item and update the API
         completeItem: async function (item) {
+
+          // Update the completed property to its opposite value
+          item.completed = !item.completed;
+
           const response = await this.send('PUT', `items/${item.id}`, {
             description: item.description,
-            completed: !item.completed,
+            completed: item.completed,
           });
 
           if (response.ok) {
+            // Update the item's completed property with the new value from the server response
             item.completed = response.body.completed;
           }
         },
+
 
         confirmDelete(item) {
           if (confirm("Do you really want to delete this item?")) {
@@ -412,10 +428,34 @@
           }
         },
 
+        removeItem: function (item) {
+          console.log(item)
+          connection.send(JSON.stringify({
+            type: 'delete',
+            id: item.id
+          }));
+
+          this.items = this.items.filter(i => i.id !== item.id);
+          console.log
+          updateUI(this.items);
+        },
+
+        // Listen for messages from the WebSocket server
+        listenForMessages: function () {
+          connection.onmessage = (event) => {
+            const data = JSON.parse(event.data);
+            console.log(data)
+            if (data.type === 'delete') {
+              this.items = this.items.filter(i => i.id !== data.id);
+              updateUI(this.items);
+            }
+          }
+        },
+
         deleteItem: async function (item) {
           const response = await this.send('DELETE', `items/${item.id}`);
           if (response.ok) {
-            this.items = this.items.filter(i => i.id !== item.id);
+            this.removeItem(response.body);
           }
         },
 
@@ -518,6 +558,46 @@
         }
       }
     }).mount('#app')
+
+  </script>
+  <script>
+    const connection = new WebSocket('wss://localhost:3000');
+
+    connection.onopen = () => {
+      console.log('connected');
+    };
+
+    connection.onerror = (error) => {
+      console.log(`WebSocket error: ${error}`);
+    };
+
+    connection.onmessage = (e) => {
+      console.log('Received WebSocket message:', e.data);
+      const data = JSON.parse(e.data);
+      console.log('Parsed WebSocket data:', data);
+      if (data.type === 'create') {
+        // Check if item already exists in app.items
+        if (!app.items.some(item => item.id === data.item.id)) {
+          app.items.push(data.item);
+        }
+      } else if (data.type === 'delete') {
+        app.items = app.items.filter(i => i.id !== data.id);
+      } else if (data.type === 'update') {
+        console.log('Received update message for item with ID:', data.id);
+        const originalItem = app.items.find(i => i.id === data.id);
+        Object.assign(originalItem, data);
+      } else if (data.type === 'update' && data.hasOwnProperty('completed')) {
+        console.log('Received update message for item with ID:', data.id);
+        const originalItem = app.items.find(i => i.id === data.id);
+        if (originalItem) {
+          originalItem.completed = data.completed;
+        }
+    }
+
+    // connect to the WebSocket in the mounted hook
+    app.mounted = function () {
+      connection;
+    }}
   </script>
 </body>
 

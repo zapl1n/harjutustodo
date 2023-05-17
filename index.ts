@@ -20,6 +20,12 @@ let httpsServer = https
     console.log("Server is running at port 3000 ");
   });
 
+var expressWs = require('express-ws')(app, httpsServer);
+
+app.ws('/', function () {
+
+});
+
 import { IRequestWithSession } from './custom'
 
 // Add bcrypt
@@ -44,10 +50,6 @@ app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
 
 // Serve static files
 app.use(express.static('public'))
-
-// Set port
-const port = process.env.Port || 3000
-
 export interface PostUserRequest extends Request {
   email: string,
   password: string
@@ -182,10 +184,10 @@ const authorizeRequest = async (req: IRequestWithSession, res: Response, next: N
 }
 
 export interface DeleteSessionResponse extends Response {
- 
+
 }
 
-app.delete('/sessions', authorizeRequest, async (req: IRequestWithSession, res:DeleteSessionResponse) => {
+app.delete('/sessions', authorizeRequest, async (req: IRequestWithSession, res: DeleteSessionResponse) => {
 
   // Delete session
   await prisma.session.delete({
@@ -234,7 +236,13 @@ app.post('/items', authorizeRequest, async (req: IRequestWithSession, res: Respo
       },
     });
 
-    res.status(201).json(newItem);
+    // emit a 'create' event with the new item data
+    expressWs.getWss().clients.forEach((client: any) => client.send(JSON.stringify({
+      type: 'create',
+      item: newItem
+    })));
+
+    res.status(201).end();
   }
 
   catch (error) {
@@ -263,14 +271,18 @@ app.delete('/items/:id', authorizeRequest, async (req: IRequestWithSession, res:
       },
     });
 
-    res.status(204).json(deletedItem);
+    expressWs.getWss().clients.forEach((client: any) => client.send(JSON.stringify({
+      type: 'delete',
+      id: deletedItem.id
+    })));
+
+    res.status(201).json(item);
   }
 
   catch (error) {
     res.status(500).send((error as Error).message || 'Something went wrong')
   }
 });
-
 
 app.put('/items/:id', authorizeRequest, async (req: IRequestWithSession, res: Response) => {
 
@@ -279,8 +291,6 @@ app.put('/items/:id', authorizeRequest, async (req: IRequestWithSession, res: Re
     // Get id from req.params
     const { id } = req.params;
     const { description, completed } = req.body;
-    const newDescription = String(description);
-
 
     if (!description) {
       return res.status(400).send('Description required');
@@ -293,8 +303,9 @@ app.put('/items/:id', authorizeRequest, async (req: IRequestWithSession, res: Re
     });
 
     if (!item || item.userId !== req.userId) {
-      return res.status(404).send('Item not found'); 
+      return res.status(404).send('Item not found');
     }
+
 
     const updatedItem = await prisma.item.update({
       where: {
@@ -306,6 +317,15 @@ app.put('/items/:id', authorizeRequest, async (req: IRequestWithSession, res: Re
       },
 
     });
+
+    expressWs.getWss().clients.forEach((client: any) => client.send(JSON.stringify({
+      type: 'update',
+      id: updatedItem.id,
+      description: updatedItem.description,
+
+      completed: updatedItem.completed,
+
+    })));
 
     res.status(200).json(updatedItem);
   }
