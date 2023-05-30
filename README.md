@@ -29,6 +29,7 @@ openssl x509 -req -days 9999 -in csr.pem -signkey key.pem -out cert.pem
 
 ## Installation
 - run `npm install` in the root directory
+- run 'npx prisma db push' in the root directory
 
 ## Running
 - run `npm start` in the root directory

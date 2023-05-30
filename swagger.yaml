@@ -101,12 +101,18 @@ paths:
                     content:
                         application/json:
                             examples:
-                                '[     {         "id": 88,         "description": "asdfasdf",         "userId": 26     } ]':
+                                Description:
                                     value:
                                         -
-                                            id: 88
                                             description: asdfasdf
-                                            userId: 26
+                        application/xml:
+                            examples:
+                                Description:
+                                    value: |-
+                                        <id>161</id>
+                                            <description>tere</description>
+                                            <userId>26</userId>
+                                            <completed>false</completed>
                     description: List of user items
             deprecated: false
             security:
@@ -166,6 +172,8 @@ paths:
                                 value:
                                     description: mina
                 required: true
+            tags:
+                - '/items/{id}'
             responses:
                 '200':
                     content:

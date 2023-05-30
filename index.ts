@@ -1,9 +1,54 @@
 // Add express
-import { NextFunction, Response, Request } from 'express';
+import { NextFunction, Response, Request, Send } from 'express';
 const express = require('express')
 const app = express()
 import * as https from 'https';
 import * as fs from 'fs';
+
+const xmlparser = require('express-xml-bodyparser');
+app.use(xmlparser());
+
+const xmlConverterMiddleware = (req: Request, res: Response, next: NextFunction) => {
+  const originalSend = res.send;
+
+  res.send = function (data) {
+    const acceptHeader = req.headers['accept'];
+    console.log('Accept Header:', acceptHeader); // Log the value of Accept header
+    console.log('Data Type:', typeof data); // Log the type of data
+
+    if (acceptHeader) {
+      if (acceptHeader.includes('application/xml')) {
+        let jsonData: any;
+        if (typeof data === 'string') {
+          try {
+            jsonData = JSON.parse(data);
+          } catch (error) {
+            console.error('Error parsing JSON:', error);
+            return originalSend.call(res, data);
+          }
+        } else {
+          jsonData = data;
+        }
+
+        // @ts-ignore
+        const xmlBuilder = new xml2js.Builder({rootName: 'root'});
+        const xmlData = xmlBuilder.buildObject({items: jsonData});
+        console.log('XML Data:', xmlData); // Log the generated XML data
+
+        res.setHeader('Content-Type', 'text/xml');
+        return originalSend.call(res, xmlData);
+      } else {
+        return originalSend.call(res, data);
+      }
+    } else {
+      return originalSend.call(res, data);
+    }
+  };
+
+  next();
+};
+
+app.use(xmlConverterMiddleware);
 
 let httpsServer = https
   .createServer(
@@ -45,6 +90,8 @@ dotenv.config()
 // Add Swagger
 import * as swaggerUi from 'swagger-ui-express'
 import * as yamljs from 'yamljs'
+import {xml2js} from "xml-js";
+
 const swaggerDocument = yamljs.load('./swagger.yaml')
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
 
@@ -210,12 +257,10 @@ app.get('/items', authorizeRequest, async (req: IRequestWithSession, res: Respon
     }
   })
 
-  // Return items
-  res.status(200).json(items)
-})
+  res.send(items);
+});
 
 app.post('/items', authorizeRequest, async (req: IRequestWithSession, res: Response) => {
-
   try {
     const { description } = req.body;
     const newDescription = String(description);
