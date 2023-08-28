@@ -1,33 +1,59 @@
 // Add express
-import { NextFunction, Response, Request, Send } from 'express';
+import {NextFunction, Response, Request, Send} from 'express';
+
 const express = require('express')
 const app = express()
 import * as https from 'https';
 import * as fs from 'fs';
+import bodyParser = require('body-parser');
+import xml2js = require('xml2js');
 
-const xmlparser = require('express-xml-bodyparser');
-app.use(xmlparser());
+const xmlBodyParser = (req: Request, res: Response, next: NextFunction) => {
+    if (req.headers['content-type'] === 'application/xml' || req.headers['content-type'] === 'text/xml') {
+        bodyParser.text({ type: 'application/xml' })(req, res, (err) => {
+            if (err) return next(err);
+
+            xml2js.parseString(req.body, { explicitArray: false }, (err, result) => {
+                if (err) return next(err);
+
+                req.body = result.root; // adapt this depending on your XML structure
+                console.log(req.body);
+                next();
+            });
+        });
+    } else {
+        next();
+    }
+};
+app.use(xmlBodyParser)
 
 const xmlConverterMiddleware = (req: Request, res: Response, next: NextFunction) => {
-  const originalSend = res.send;
+    const originalSend = res.send;
 
-  res.send = function (data) {
-    const acceptHeader = req.headers['accept'];
-    console.log('Accept Header:', acceptHeader); // Log the value of Accept header
-    console.log('Data Type:', typeof data); // Log the type of data
+    res.send = function (data) {
+        const acceptHeader = req.headers['accept'];
+        console.log('Accept Header:', acceptHeader); // Log the value of Accept header
+        console.log('Data Type:', typeof data); // Log the type of data
 
-    if (acceptHeader) {
-      if (acceptHeader.includes('application/xml')) {
+        if (!acceptHeader) {
+            return originalSend.call(res, data);
+        }
+
+        if (!acceptHeader.includes('application/xml')) {
+            return originalSend.call(res, data);
+        }
+
         let jsonData: any;
         if (typeof data === 'string') {
-          try {
-            jsonData = JSON.parse(data);
-          } catch (error) {
-            console.error('Error parsing JSON:', error);
-            return originalSend.call(res, data);
-          }
+            try {
+                console.log('Data:', data); // Log the data
+                jsonData = JSON.parse(data);
+            } catch (error) {
+                //console.error('Error parsing JSON:', error);
+                return originalSend.call(res, data);
+            }
         } else {
-          jsonData = data;
+            jsonData = data;
         }
 
         // @ts-ignore
@@ -37,16 +63,12 @@ const xmlConverterMiddleware = (req: Request, res: Response, next: NextFunction)
 
         res.setHeader('Content-Type', 'text/xml');
         return originalSend.call(res, xmlData);
-      } else {
-        return originalSend.call(res, data);
-      }
-    } else {
-      return originalSend.call(res, data);
-    }
-  };
 
-  next();
-};
+    }
+
+    next();
+}
+
 
 app.use(xmlConverterMiddleware);
 
@@ -90,7 +112,6 @@ dotenv.config()
 // Add Swagger
 import * as swaggerUi from 'swagger-ui-express'
 import * as yamljs from 'yamljs'
-import {xml2js} from "xml-js";
 
 const swaggerDocument = yamljs.load('./swagger.yaml')
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
@@ -287,10 +308,12 @@ app.post('/items', authorizeRequest, async (req: IRequestWithSession, res: Respo
       item: newItem
     })));
 
-    res.status(201).end();
-  }
+        res.status(201).send({
+            id: newItem.id,
+            description: newItem.description
+        });
 
-  catch (error) {
+    } catch (error) {
     res.status(500).send((error as Error).message || 'Something went wrong')
   }
 });
