@@ -2,7 +2,7 @@
 
 import { signIn } from './loginhelper';
 
-// Test sign in 
+// Test sign in
 describe('Signin', () => {
 
     it('should signin a user', () => {
@@ -12,7 +12,7 @@ describe('Signin', () => {
     it('should not signin a user with wrong password', () => {
         const alertStub = cy.stub()
         cy.on('window:alert', alertStub)
-        cy.visit('http://localhost:3000/');
+        cy.visit('https://localhost:3000/');
         cy.contains('button', 'Sign In').click();
         cy.get('#signin-email').type('test@test.ee');
         cy.get('#signin-password').click();
