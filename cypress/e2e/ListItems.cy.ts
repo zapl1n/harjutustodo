@@ -4,7 +4,7 @@ import { signIn } from './loginhelper';
 
 describe('List Items', () => {
     it('should not list items when not signed in', () => {
-        cy.visit('http://localhost:3000/');
+        cy.visit('https://localhost:3000/');
         // Verify that the items are not visible
         cy.get('[data-cy=item-container]').should('not.exist');
     });

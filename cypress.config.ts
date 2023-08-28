@@ -6,4 +6,17 @@ export default defineConfig({
       // implement node event listeners here
     },
   },
+  clientCertificates: [
+    {
+      url: 'https://localhost:3000/**',
+      ca: ['cert.pem'],
+      certs: [
+        {
+          cert: 'cert.pem',
+          key: 'key.pem',
+          // passphrase: 'certs/pem-passphrase.txt',
+        },
+      ],
+    },
+  ],
 });
