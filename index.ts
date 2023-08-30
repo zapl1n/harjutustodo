@@ -4,6 +4,50 @@ const express = require('express')
 const app = express()
 import * as https from 'https';
 import * as fs from 'fs';
+import * as xml2js from 'xml2js';
+import * as dotenv from 'dotenv';
+import passport from 'passport';
+
+dotenv.config();
+
+const GoogleStrategy = require('passport-google-oauth20').Strategy;
+require('dotenv').config();
+
+passport.use(new GoogleStrategy({
+  clientID: process.env.GOOGLE_CLIENT_ID,
+  clientSecret: process.env.GOOGLE_CLIENT_SECRET,
+  callbackURL: "https://localhost:3000/auth/google/callback",
+  passReqToCallback: true
+},
+  function (request: any, accessToken: string, refreshToken: string, profile: any, done: any) {
+    console.log(profile);
+    return done(null, profile);
+  }
+));
+
+passport.serializeUser(function (user: any, done: any) {
+  done(null, user);
+}
+);
+
+passport.deserializeUser(function (user: any, done: any) {
+  done(null, user);
+});
+
+
+app.get('/auth/google',
+  passport.authenticate('google', { scope: ['email', 'profile'] }));
+
+app.get('/auth/google/callback',
+  passport.authenticate('google', {
+    successRedirect: '/auth/protected',
+    failureRedirect: '/auth/google/failure'
+  }));
+
+app.get('/auth/protected', (req: any, res: any) => {
+  res.send('You have reached the protected route');
+}
+);
 
 const xmlparser = require('express-xml-bodyparser');
 app.use(xmlparser());
@@ -16,33 +60,28 @@ const xmlConverterMiddleware = (req: Request, res: Response, next: NextFunction)
     console.log('Accept Header:', acceptHeader); // Log the value of Accept header
     console.log('Data Type:', typeof data); // Log the type of data
 
-    if (acceptHeader) {
-      if (acceptHeader.includes('application/xml')) {
-        let jsonData: any;
-        if (typeof data === 'string') {
-          try {
-            jsonData = JSON.parse(data);
-          } catch (error) {
-            console.error('Error parsing JSON:', error);
-            return originalSend.call(res, data);
-          }
-        } else {
-          jsonData = data;
+    if (acceptHeader && acceptHeader.includes('application/xml')) {
+      let jsonData: any;
+      if (typeof data === 'string') {
+        try {
+          jsonData = JSON.parse(data);
+        } catch (error) {
+          console.error('Error parsing JSON:', error);
+          return originalSend.call(res, data);
         }
-
-        // @ts-ignore
-        const xmlBuilder = new xml2js.Builder({rootName: 'root'});
-        const xmlData = xmlBuilder.buildObject({items: jsonData});
-        console.log('XML Data:', xmlData); // Log the generated XML data
-
-        res.setHeader('Content-Type', 'text/xml');
-        return originalSend.call(res, xmlData);
       } else {
-        return originalSend.call(res, data);
+        jsonData = data;
       }
-    } else {
-      return originalSend.call(res, data);
+
+      const xmlBuilder = new xml2js.Builder({ rootName: 'root' });
+      const xmlData = xmlBuilder.buildObject({ items: jsonData });
+      console.log('XML Data:', xmlData); // Log the generated XML data
+
+      res.setHeader('Content-Type', 'text/xml');
+      return originalSend.call(res, xmlData);
     }
+
+    return originalSend.call(res, data);
   };
 
   next();
@@ -83,14 +122,11 @@ const prisma = new PrismaClient()
 // Parse application/json
 app.use(express.json())
 
-// Add dotnev
-import * as dotenv from 'dotenv'
-dotenv.config()
+
 
 // Add Swagger
 import * as swaggerUi from 'swagger-ui-express'
-import * as yamljs from 'yamljs'
-import {xml2js} from "xml-js";
+import * as yamljs from 'yamljs';
 
 const swaggerDocument = yamljs.load('./swagger.yaml')
 app.use('/docs', swaggerUi.serve, swaggerUi.setup(swaggerDocument))
@@ -145,6 +181,7 @@ export interface PostSessionRequest extends Request {
 export interface PostSessionResponse extends Response {
   sessionToken: string
 }
+
 
 app.post('/sessions', async (req: PostSessionRequest, res: PostSessionResponse) => {
 

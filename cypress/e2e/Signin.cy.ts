@@ -1,27 +1,31 @@
-/// <reference types="cypress" />
+import { Given, When, Then } from 'cypress-cucumber-preprocessor/steps';
 
-import { signIn } from './loginhelper';
-
-// Test sign in 
-describe('Signin', () => {
-
-    it('should signin a user', () => {
-        signIn();
-    });
-
-    it('should not signin a user with wrong password', () => {
-        const alertStub = cy.stub()
-        cy.on('window:alert', alertStub)
-        cy.visit('http://localhost:3000/');
-        cy.contains('button', 'Sign In').click();
-        cy.get('#signin-email').type('test@test.ee');
-        cy.get('#signin-password').click();
-        cy.get('#signin-password').type('wrongpassword');
-        cy.get('#signin-submit').click();
-
-        // Check that alert "Invalid email or password" is visible
-        cy.wrap(alertStub).should('be.calledWith', 'Error code 401:\nInvalid email or password')
-    });
+Given('I am on the homepage', () => {
+  cy.visit('https://localhost:3000/');
 });
 
+When('I click the "Sign In" button', () => {
+  cy.contains('button', 'Sign In').click();
+});
 
+When('I enter my email and password', () => {
+  cy.get('#signin-email').type('your-email@example.com');
+  cy.get('#signin-password').type('your-password');
+});
+
+When('I submit the signin form', () => {
+  cy.get('#signin-submit').click();
+});
+
+Then('I should be signed in', () => {
+  cy.contains('button', 'Sign Out').should('be.visible');
+});
+
+Then('I should see an error message', () => {
+  const alertStub = cy.stub();
+  cy.on('window:alert', alertStub);
+  cy.wrap(alertStub).should(
+    'be.calledWith',
+    'Error code 401:\nInvalid email or password'
+  );
+});

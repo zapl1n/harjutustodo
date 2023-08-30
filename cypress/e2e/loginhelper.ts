@@ -2,7 +2,7 @@ export const signIn = () => {
     const email = 'test@test.ee';
     const password = 'test123';
 
-    cy.visit('http://localhost:3000/'); // Adjust this according to your login page route
+    cy.visit('https://localhost:3000/'); // Adjust this according to your login page route
     cy.get('[data-cy=open-signin-modal-button]').click();
     cy.get('[data-cy=email-input]').type(email, { force: true });
     cy.get('[data-cy=password-input]').type(password, { force: true });

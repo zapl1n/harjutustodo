@@ -1,17 +1,15 @@
-/// <reference types="cypress" />
-
+import { Given, When, Then } from 'cypress-cucumber-preprocessor/steps';
 import { signIn } from './loginhelper';
 
-describe('Add Items', () => {
+Given('I am signed in', () => {
+    signIn();
+});
 
-    it('should add an item', () => {
-        signIn();
+When('I add an item with the name {string}', (itemName) => {
+    cy.get('[data-cy=add-item-input]').type(itemName);
+    cy.get('[data-cy=add-item-button]').click();
+});
 
-        // Add an item
-        cy.get('[data-cy=add-item-input]').type('Cypress Test Item');
-        cy.get('[data-cy=add-item-button]').click();
-
-        // Verify that the item is visible
-        cy.get('[data-cy=item-container]').contains('Cypress Test Item');
-    });
+Then('I should see the item {string} in the item list', (itemName) => {
+    cy.get('[data-cy=item-container]').contains(itemName);
 });

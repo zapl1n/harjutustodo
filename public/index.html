@@ -156,16 +156,40 @@
     [v-cloak] {
       display: none;
     }
+
+    /* styles.css */
+
+    /* Style the link to look like a button */
+    .login-button {
+
+      display: inline-block;
+      padding: 10px 20px;
+      background-color: #4285F4;
+      /* Google blue color */
+      color: #ffffff;
+      border: none;
+      border-radius: 5px;
+      text-decoration: none;
+      font-weight: bold;
+    }
+
+    /* Change link appearance on hover */
+    .login-button:hover {
+      background-color: #3367D6;
+      /* Darker shade of Google blue */
+    }
   </style>
+
 </head>
 
 <body>
+  <a href="/auth/google" class="login-button">Login with Google</a>
+
   <h1>Organize your
     work and life</h1>
   <div v-cloak id="app">
 
     <div class="container">
-
       <div class="row text-center">
         <div class="button-container">
           <!-- Button trigger modal -->
@@ -421,7 +445,6 @@
           }
         },
 
-
         confirmDelete(item) {
           if (confirm("Do you really want to delete this item?")) {
             this.deleteItem(item);
@@ -436,8 +459,7 @@
           }));
 
           this.items = this.items.filter(i => i.id !== item.id);
-          console.log
-          updateUI(this.items);
+          console.log(updateUI(this.items));
         },
 
         // Listen for messages from the WebSocket server
@@ -447,7 +469,7 @@
             console.log(data)
             if (data.type === 'delete') {
               this.items = this.items.filter(i => i.id !== data.id);
-              updateUI(this.items);
+              console.log(this.updateUI(this.items));
             }
           }
         },
@@ -592,12 +614,16 @@
         if (originalItem) {
           originalItem.completed = data.completed;
         }
-    }
+      }
 
-    // connect to the WebSocket in the mounted hook
-    app.mounted = function () {
-      connection;
-    }}
+      // connect to the WebSocket in the mounted hook
+      app.mounted = function () {
+        connection;
+      }
+    }
+  </script>
+  <script>
+
   </script>
 </body>
 

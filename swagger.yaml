@@ -105,14 +105,6 @@ paths:
                                     value:
                                         -
                                             description: asdfasdf
-                        application/xml:
-                            examples:
-                                Description:
-                                    value: |-
-                                        <id>161</id>
-                                            <description>tere</description>
-                                            <userId>26</userId>
-                                            <completed>false</completed>
                     description: List of user items
             deprecated: false
             security:
